@@ -24,7 +24,7 @@ my_test_scenario = Scenario(name='Test Scenario',
 # Define Game Settings
 game_settings = {'perf_tracker': True,
                  'graphics_type': GraphicsType.Tkinter,
-                 'realtime_multiplier': 20,
+                 'realtime_multiplier': 1,
                  'graphics_obj': None,
                  'frequency': 30}
 
