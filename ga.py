@@ -40,9 +40,9 @@ ga = EasyGA.GA()
 
 ga.gene_impl = lambda: random.randint(0, 1000)/1000
 ga.chromosome_length = 32
-ga.population_size = 20
+ga.population_size = 30
 ga.target_fitness_type = 'max'
-ga.generation_goal = 30
+ga.generation_goal = 50
 ga.fitness_function_impl = fitness
 
 
