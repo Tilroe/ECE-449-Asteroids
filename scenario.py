@@ -8,6 +8,8 @@ import time
 from kesslergame import Scenario, KesslerGame, GraphicsType, TrainerEnvironment
 from test import ScottDickController
 from graphics_both import GraphicsBoth
+import EasyGA
+
 
 # Define game scenario
 my_test_scenario = Scenario(name='Test Scenario',
@@ -37,7 +39,12 @@ game = KesslerGame(settings=game_settings)  # Use this to visualize the game sce
 # Evaluate the game
 pre = time.perf_counter()
 
-chromosome = [1, 2, 3]
+ga = EasyGA.GA()
+
+best_chromosome = "[0.581][0.255][0.204][0.941][0.789][0.928][0.984][0.007][0.22][0.394][0.149][0.172][0.473][0.368][" \
+                  "0.538][0.272][0.334][0.444][0.713][0.176][0.596][0.366][0.289][0.072][0.511][0.404][0.254][0.471][" \
+                  "0.601][0.494][0.018][0.924]"
+chromosome = ga.make_chromosome([float(i) for i in best_chromosome[1:-1].split("][")])
 
 print("Starting")
 score, perf_data = game.run(scenario=my_test_scenario, controllers=[ScottDickController(chromosome)])
