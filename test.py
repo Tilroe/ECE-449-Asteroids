@@ -84,7 +84,11 @@ class ScottDickController(KesslerController):
         ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')  # Max thrust is 480 from source files
         ship_turn = ctrl.Consequent(np.arange(-180, 180, 1), 'ship_turn')  # Degrees due to Kessler
         ship_fire = ctrl.Consequent(np.arange(-1, 1, 0.1), 'ship_fire')
-        # ship_bomb = ctrl.Consequent(np.arange(-1, 1, 0.1), 'ship_bomb')
+
+
+
+
+
 
         # Declare fuzzy sets for collision_time (how long until asteroid collides with ship)
         collision_time['S'] = fuzz.trimf(collision_time.universe, [0, 0, self.max_collision_time / 2])
@@ -93,6 +97,39 @@ class ScottDickController(KesslerController):
         collision_time['L'] = fuzz.trimf(collision_time.universe,
                                          [self.max_collision_time / 2, self.max_collision_time / 2,
                                           self.max_collision_time])
+
+        # collison time is 3 points, use 3 genes. Gene 1 = midpoint, gene 2 = left percent, gene 3 = right percent
+
+
+        def setup_mf_tri(ctrl_name, box_names, midpoint, left_percent, right_percent):
+            left_distance = midpoint - 0
+            right_distance = 1 - midpoint
+
+            left_point = midpoint-left_distance*left_percent
+            right_point = midpoint+right_distance*right_percent
+
+            ctrl_name[box_names[0]] = fuzz.trimf(collision_time.universe, [0, 0, midpoint])
+            ctrl_name[box_names[1]] = fuzz.trimf(collision_time.universe, [left_point, midpoint, right_point])
+            ctrl_name[box_names[2]] = fuzz.trimf(collision_time.universe, [midpoint, 1, 1])
+
+        def setup_mf_pen(ctrl_name, box_names, midpoint, left_percent_1, left_percent_2, right_percent_1, right_percent_2):
+            left_distance_1 = midpoint - 0
+            right_distance_1 = 1 - midpoint
+
+            left_point_1 = midpoint - left_distance_1 * left_percent_1
+            right_point_1 = midpoint + right_distance_1 * right_percent_1
+
+            left_distance_2 = left_point_1 - 0
+            right_distance_2 = 1 - right_point_1
+
+            left_point_2 = left_point_1 - left_distance_2 * left_percent_2
+            right_point_2 = right_point_1 + right_distance_2 * right_percent_2
+
+            ctrl_name[box_names[0]] = fuzz.zmf(collision_time.universe, left_point_2, left_point_1)
+            ctrl_name[box_names[1]] = fuzz.trimf(collision_time.universe, [left_point_2, left_point_1, midpoint])
+            ctrl_name[box_names[2]] = fuzz.trimf(collision_time.universe, [left_point_1, midpoint, right_point_1])
+            ctrl_name[box_names[3]] = fuzz.trimf(collision_time.universe, [midpoint, right_point_1, right_point_2])
+            ctrl_name[box_names[4]] = fuzz.smf(collision_time.universe, right_point_1, right_point_2)
 
         # Declare fuzzy sets for ship_speed
         ship_speed['N'] = fuzz.trimf(ship_speed.universe, [-240, -240, 0])
@@ -148,42 +185,15 @@ class ScottDickController(KesslerController):
         # Declare each fuzzy rule
 
         # --- Shooting rules ---
-        rule0 = ctrl.Rule(theta_delta['NS'] | theta_delta['Z'] | theta_delta['PS'], ship_fire['Y'])
-        rulex = ctrl.Rule(theta_delta['NL'] | theta_delta['PL'], ship_fire['N'])
+        rule0 = ctrl.Rule((bullet_time['S'] | bullet_time['M']) & (theta_delta['NS'] | theta_delta['Z'] | theta_delta['PS']), ship_fire['Y'])
+        rulex = ctrl.Rule(bullet_time['L'] | theta_delta['NL'] | theta_delta['PL'], ship_fire['N'])
 
         # --- Aiming rules ---
-        rule1 = ctrl.Rule(ship_speed['Z'] & bullet_time['L'] & theta_delta['NL'], (ship_turn['NL'], ship_thrust['Z']))
-        # if there is a long bullet time and a large negative theta_delta, then turn left and don't fire
-        rule2 = ctrl.Rule(ship_speed['Z'] & bullet_time['L'] & theta_delta['NS'], (ship_turn['NS'], ship_thrust['Z']))
-        # if there is a long bullet time and a small negative theta_delta, then turn left and fire
-        rule3 = ctrl.Rule(ship_speed['Z'] & bullet_time['L'] & theta_delta['Z'], (ship_turn['Z'], ship_thrust['Z']))
-        # if there is a long bullet time and a zero theta_delta, then turn left and fire
-        rule4 = ctrl.Rule(ship_speed['Z'] & bullet_time['L'] & theta_delta['PS'], (ship_turn['PS'], ship_thrust['Z']))
-        # if there is a long bullet time and a small positive theta_delta, then turn left and fire
-        rule5 = ctrl.Rule(ship_speed['Z'] & bullet_time['L'] & theta_delta['PL'], (ship_turn['PL'], ship_thrust['Z']))
-        # if there is a long bullet time and a large positive theta_delta, then turn left and don't fire
-
-        rule6 = ctrl.Rule(ship_speed['Z'] & bullet_time['M'] & theta_delta['NL'], (ship_turn['NL'], ship_thrust['Z']))
-        # if there is a medium bullet time and a large negative theta_delta, then turn left and don't fire
-        rule7 = ctrl.Rule(ship_speed['Z'] & bullet_time['M'] & theta_delta['NS'], (ship_turn['NS'], ship_thrust['Z']))
-        # if there is a medium bullet time and a small negative theta_delta, then turn left and fire
-        rule8 = ctrl.Rule(ship_speed['Z'] & bullet_time['M'] & theta_delta['Z'], (ship_turn['Z'], ship_thrust['Z']))
-        # if there is a medium bullet time and a zero theta_delta, then turn left and fire
-        rule9 = ctrl.Rule(ship_speed['Z'] & bullet_time['M'] & theta_delta['PS'], (ship_turn['PS'], ship_thrust['Z']))
-        # if there is a medium bullet time and a small positive theta_delta, then turn left and fire
-        rule10 = ctrl.Rule(ship_speed['Z'] & bullet_time['M'] & theta_delta['PL'], (ship_turn['PL'], ship_thrust['Z']))
-        # if there is a medium bullet time and a large positive theta_delta, then turn left and don't fire
-
-        rule11 = ctrl.Rule(ship_speed['Z'] & bullet_time['S'] & theta_delta['NL'], (ship_turn['NL'], ship_thrust['Z']))
-        # if there is a short bullet time and a large negative theta_delta, then turn left and fire
-        rule12 = ctrl.Rule(ship_speed['Z'] & bullet_time['S'] & theta_delta['NS'], (ship_turn['NS'], ship_thrust['Z']))
-        # if there is a short bullet time and a small negative theta_delta, then turn left and fire
-        rule13 = ctrl.Rule(ship_speed['Z'] & bullet_time['S'] & theta_delta['Z'], (ship_turn['Z'], ship_thrust['Z']))
-        # if there is a short bullet time and a zero theta_delta, then turn left and fire
-        rule14 = ctrl.Rule(ship_speed['Z'] & bullet_time['S'] & theta_delta['PS'], (ship_turn['PS'], ship_thrust['Z']))
-        # if there is a short bullet time and a small positive theta_delta, then turn left and fire
-        rule15 = ctrl.Rule(ship_speed['Z'] & bullet_time['S'] & theta_delta['PL'], (ship_turn['PL'], ship_thrust['Z']))
-        # if there is a short bullet time and a large positive theta_delta, then turn left and fire
+        rule1 = ctrl.Rule(theta_delta['NL'], (ship_turn['NL']))
+        rule2 = ctrl.Rule(theta_delta['NS'], (ship_turn['NS']))
+        rule3 = ctrl.Rule(theta_delta['Z'], (ship_turn['Z']))
+        rule4 = ctrl.Rule(theta_delta['PS'], (ship_turn['PS']))
+        rule5 = ctrl.Rule(theta_delta['PL'], (ship_turn['PL']))
 
         # --- Movement rules ---
         # low collision risk rules, slow down to stationary
@@ -192,35 +202,35 @@ class ScottDickController(KesslerController):
         rule18 = ctrl.Rule(collision_time['L'] & ship_speed['Z'], ship_thrust['Z'])
 
         # medium collision risk rules
-        rule19 = ctrl.Rule(collision_time['M'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['Z']))
+        rule19 = ctrl.Rule(collision_time['M'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['NS']))
         rule20 = ctrl.Rule(collision_time['M'] & collision_theta['NM'], (ship_turn['Z'], ship_thrust['PS']))
-        rule21 = ctrl.Rule(collision_time['M'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['Z']))
+        rule21 = ctrl.Rule(collision_time['M'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['PS']))
         rule22 = ctrl.Rule(collision_time['M'] & collision_theta['Z'],
-                           (ship_turn['NS'], ship_thrust['Z']))  # default turn right when asteroid coming head on
-        rule23 = ctrl.Rule(collision_time['M'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['Z']))
+                           (ship_turn['NS'], ship_thrust['PS']))  # default turn right when asteroid coming head on
+        rule23 = ctrl.Rule(collision_time['M'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['PS']))
         rule24 = ctrl.Rule(collision_time['M'] & collision_theta['PM'], (ship_turn['Z'], ship_thrust['PS']))
-        rule25 = ctrl.Rule(collision_time['M'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['Z']))
+        rule25 = ctrl.Rule(collision_time['M'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NS']))
 
         # high collision risk rules
-        rule26 = ctrl.Rule(collision_time['S'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['Z']))
+        rule26 = ctrl.Rule(collision_time['S'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['NL']))
         rule27 = ctrl.Rule(collision_time['S'] & collision_theta['NM'], (ship_turn['Z'], ship_thrust['PL']))
-        rule28 = ctrl.Rule(collision_time['S'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['Z']))
+        rule28 = ctrl.Rule(collision_time['S'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['PL']))
         rule29 = ctrl.Rule(collision_time['S'] & collision_theta['Z'],
-                           (ship_turn['NS'], ship_thrust['PS']))  # default turn right when asteroid coming head on
-        rule30 = ctrl.Rule(collision_time['S'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['Z']))
+                           (ship_turn['Z'], ship_thrust['PS']))  # default turn right when asteroid coming head on
+        rule30 = ctrl.Rule(collision_time['S'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['PL']))
         rule31 = ctrl.Rule(collision_time['S'] & collision_theta['PM'], (ship_turn['Z'], ship_thrust['PL']))
-        rule32 = ctrl.Rule(collision_time['S'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['Z']))
+        rule32 = ctrl.Rule(collision_time['S'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NL']))
 
         # DEBUG
-        # bullet_time.view()
-        # theta_delta.view()
-        # ship_speed.view()
-        # collision_time.view()
-        # collision_theta.view()
+        bullet_time.view()
+        theta_delta.view()
+        ship_speed.view()
+        collision_time.view()
+        collision_theta.view()
         #
-        # ship_turn.view()
-        # ship_fire.view()
-        # ship_thrust.view()
+        ship_turn.view()
+        ship_fire.view()
+        ship_thrust.view()
 
         # Declare the fuzzy controller, add the rules
         # This is an instance variable, and thus available for other methods in the same object. See notes.
@@ -235,16 +245,6 @@ class ScottDickController(KesslerController):
         self.ship_control.addrule(rule3)
         self.ship_control.addrule(rule4)
         self.ship_control.addrule(rule5)
-        self.ship_control.addrule(rule6)
-        self.ship_control.addrule(rule7)
-        self.ship_control.addrule(rule8)
-        self.ship_control.addrule(rule9)
-        self.ship_control.addrule(rule10)
-        self.ship_control.addrule(rule11)
-        self.ship_control.addrule(rule12)
-        self.ship_control.addrule(rule13)
-        self.ship_control.addrule(rule14)
-        self.ship_control.addrule(rule15)
         self.ship_control.addrule(rule16)
         self.ship_control.addrule(rule17)
         self.ship_control.addrule(rule18)
@@ -370,9 +370,9 @@ class ScottDickController(KesslerController):
                 closest_collision = collision_time
                 collision_angle = angle
 
-        if closest_collision < self.max_collision_time:
-            degr = collision_angle * 180 / math.pi
-            print(f"Predicted collision: t = {closest_collision:.1f}, theta = {degr:.1f}")
+        #if closest_collision < self.max_collision_time:
+        #    degr = collision_angle * 180 / math.pi
+        #    print(f"Predicted collision: t = {closest_collision:.1f}, theta = {degr:.1f}")
 
         # ---------------------- FUZZY SYSTEM ----------------------
         # Pass the inputs to the rulebase and fire it

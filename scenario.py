@@ -5,7 +5,7 @@
 
 import time
 
-from kesslergame import Scenario, KesslerGame, GraphicsType
+from kesslergame import Scenario, KesslerGame, GraphicsType, TrainerEnvironment
 from test import ScottDickController
 from graphics_both import GraphicsBoth
 
@@ -27,7 +27,7 @@ my_test_scenario = Scenario(name='Test Scenario',
 # Define Game Settings
 game_settings = {'perf_tracker': True,
                  'graphics_type': GraphicsType.Tkinter,
-                 'realtime_multiplier': 1,
+                 'realtime_multiplier': 0,
                  'graphics_obj': None,
                  'frequency': 30}
 
@@ -36,10 +36,15 @@ game = KesslerGame(settings=game_settings)  # Use this to visualize the game sce
 
 # Evaluate the game
 pre = time.perf_counter()
-score, perf_data = game.run(scenario=my_test_scenario, controllers=[ScottDickController()])
+
+chromosome = [1, 2, 3]
+
+print("Starting")
+score, perf_data = game.run(scenario=my_test_scenario, controllers=[ScottDickController(chromosome)])
+print("Ended")
 
 # Print out some general info about the result
-print('Scenario eval time: '+str(time.perf_counter()-pre))
+print('Scenario eval time: ' + str(time.perf_counter() - pre))
 print(score.stop_reason)
 print('Asteroids hit: ' + str([team.asteroids_hit for team in score.teams]))
 print('Deaths: ' + str([team.deaths for team in score.teams]))
