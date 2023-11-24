@@ -16,6 +16,148 @@ import numpy as np
 import matplotlib as plt
 
 
+def setup_mf_tri(ctrl_name, box_names, midpoint, lp, rp, offset=0.0, length=1.0):
+    """
+    Sets up a 3 bin membership function
+    :param ctrl_name: The control
+    :param box_names: A list of the names of the bins (from left to right)
+    :param midpoint: A number between 0 and 1
+    :param lp: Percent the left point is away from the midpoint
+    :param rp: Percent the right point is away from the midpoint
+    :param offset: If the function is not centered at 0, the offset
+    :param length: The length of the function
+    :return ctrl_name: The control with the membership functions added
+    """
+    midpoint = midpoint.value
+    lp = lp.value
+    rp = rp.value
+
+    left_distance = midpoint - 0
+    right_distance = 1 - midpoint
+
+    left_point = midpoint - left_distance * lp
+    right_point = midpoint + right_distance * rp
+
+    left_point = left_point * length + offset
+    right_point = right_point * length + offset
+    midpoint = midpoint * length + offset
+
+    ctrl_name[box_names[0]] = fuzz.trimf(ctrl_name.universe, [offset, offset, midpoint])
+    ctrl_name[box_names[1]] = fuzz.trimf(ctrl_name.universe, [left_point, midpoint, right_point])
+    ctrl_name[box_names[2]] = fuzz.trimf(ctrl_name.universe, [midpoint, length+offset, length+offset])
+
+    return ctrl_name
+
+
+def setup_mf_pen(ctrl_name, box_names, midpoint, lp1, lp2, rp1, rp2, offset=0.0, length=1.0):
+    """
+    Sets up a 5 bin membership function
+    :param ctrl_name: The control
+    :param box_names: A list of the names of the bins (from left to right)
+    :param midpoint: A number between 0 and 1
+    :param lp1: Percent the first left point is away from the midpoint
+    :param lp2: Percent the second left point is away from the midpoint
+    :param rp1: Percent the first right point is away from the midpoint
+    :param rp2: Percent the second right point is away from the midpoint
+    :param offset: If the function is not centered at 0, the offset
+    :param length: The length of the function
+    :return ctrl_name: The control with the membership functions added
+    """
+
+    midpoint = midpoint.value
+    lp1 = lp1.value
+    rp1 = rp1.value
+    lp2 = lp2.value
+    rp2 = rp2.value
+
+
+
+    left_distance_1 = midpoint - 0
+    right_distance_1 = 1 - midpoint
+
+    left_point_1 = midpoint - left_distance_1 * lp1
+    right_point_1 = midpoint + right_distance_1 * rp1
+
+    left_distance_2 = left_point_1 - 0
+    right_distance_2 = 1 - right_point_1
+
+    left_point_2 = left_point_1 - left_distance_2 * lp2
+    right_point_2 = right_point_1 + right_distance_2 * rp2
+
+    left_point_2 = left_point_2 * length + offset
+    left_point_1 = left_point_1 * length + offset
+    midpoint = midpoint * length + offset
+    right_point_1 = right_point_1 * length + offset
+    right_point_2 = right_point_2 * length + offset
+
+    ctrl_name[box_names[0]] = fuzz.zmf(ctrl_name.universe, left_point_2, left_point_1)
+    ctrl_name[box_names[1]] = fuzz.trimf(ctrl_name.universe, [left_point_2, left_point_1, midpoint])
+    ctrl_name[box_names[2]] = fuzz.trimf(ctrl_name.universe, [left_point_1, midpoint, right_point_1])
+    ctrl_name[box_names[3]] = fuzz.trimf(ctrl_name.universe, [midpoint, right_point_1, right_point_2])
+    ctrl_name[box_names[4]] = fuzz.smf(ctrl_name.universe, right_point_1, right_point_2)
+
+    return ctrl_name
+
+
+def setup_mf_hept(ctrl_name, box_names, midpoint, lp1, lp2, lp3, rp1, rp2, rp3, offset=0.0, length=1.0):
+    """
+    Sets up a 5 bin membership function
+    :param ctrl_name: The control
+    :param box_names: A list of the names of the bins (from left to right)
+    :param midpoint: A number between 0 and 1
+    :param lp1: Percent the first left point is away from the midpoint
+    :param lp2: Percent the second left point is away from the midpoint
+    :param lp3: Percent the third left point is away from the midpoint
+    :param rp1: Percent the first right point is away from the midpoint
+    :param rp2: Percent the second right point is away from the midpoint
+    :param rp3: Percent the third right point is away from the midpoint
+    :param offset: If the function is not centered at 0, the offset
+    :param length: The length of the function
+    :return ctrl_name: The control with the membership functions added
+    """
+
+    midpoint = midpoint.value
+    lp1 = lp1.value
+    rp1 = rp1.value
+    lp2 = lp2.value
+    rp2 = rp2.value
+    lp3 = lp3.value
+    rp3 = rp3.value
+
+    left_distance_1 = midpoint - 0
+    right_distance_1 = 1 - midpoint
+    left_point_1 = midpoint - left_distance_1 * lp1
+    right_point_1 = midpoint + right_distance_1 * rp1
+
+    left_distance_2 = left_point_1 - 0
+    right_distance_2 = 1 - right_point_1
+    left_point_2 = left_point_1 - left_distance_2 * lp2
+    right_point_2 = right_point_1 + right_distance_2 * rp2
+
+    left_distance_3 = left_point_2 - 0
+    right_distance_3 = 1 - right_point_2
+    left_point_3 = left_point_2 - left_distance_3 * lp3
+    right_point_3 = right_point_2 + right_distance_3 * rp3
+
+
+    left_point_3 = left_point_3 * length + offset
+    left_point_2 = left_point_2 * length + offset
+    left_point_1 = left_point_1 * length + offset
+    midpoint = midpoint * length + offset
+    right_point_1 = right_point_1 * length + offset
+    right_point_2 = right_point_2 * length + offset
+    right_point_3 = right_point_3 * length + offset
+
+    ctrl_name[box_names[0]] = fuzz.zmf(ctrl_name.universe, left_point_3, left_point_2)
+    ctrl_name[box_names[1]] = fuzz.trimf(ctrl_name.universe, [left_point_3, left_point_2, left_point_1])
+    ctrl_name[box_names[2]] = fuzz.trimf(ctrl_name.universe, [left_point_2, left_point_1, midpoint])
+    ctrl_name[box_names[3]] = fuzz.trimf(ctrl_name.universe, [left_point_1, midpoint, right_point_1])
+    ctrl_name[box_names[4]] = fuzz.trimf(ctrl_name.universe, [midpoint, right_point_1, right_point_2])
+    ctrl_name[box_names[5]] = fuzz.trimf(ctrl_name.universe, [right_point_1, right_point_2, right_point_3])
+    ctrl_name[box_names[6]] = fuzz.smf(ctrl_name.universe, right_point_2, right_point_3)
+
+    return ctrl_name
+
 def norm(a, b) -> int:
     return sqrt(a ** 2 + b ** 2).real
 
@@ -67,27 +209,68 @@ def collision_prediction(ship, asteroid, time_limit):
 
 
 class ScottDickController(KesslerController):
-    def __init__(self):
+    def __init__(self, chromosome):
         self.eval_frames = 0  # What is this?
         self.max_collision_time = 5  # Look up to this many seconds in advance for a collision
 
         # self.ship_control is the targeting rulebase, which is static in this controller.
+
         # Declare variables
         ship_speed = ctrl.Antecedent(np.arange(-240, 240, 1), "ship_speed")  # Max speed is 240 from source files
-        collision_time = ctrl.Antecedent(np.arange(0, self.max_collision_time, 0.02),
-                                         'collision_time')  # time until closest collision
-        collision_theta = ctrl.Antecedent(np.arange(-math.pi, math.pi, 0.1),
-                                          'collision_theta')  # angle between ship heading and asteroid theta
+        ship_speed = setup_mf_tri(ship_speed, ["N", "Z", "P"],
+                                  chromosome[0], chromosome[1], chromosome[2],
+                                  -240, 480)
+
+
+        # time until closest collision
+        collision_time = ctrl.Antecedent(np.arange(0, self.max_collision_time, 0.02), 'collision_time')
+        collision_time = setup_mf_tri(collision_time, ["S", "M", "L"],
+                                      chromosome[3], chromosome[4], chromosome[5],
+                                      0, self.max_collision_time)
+
+        # angle between ship heading and asteroid theta
+        collision_theta = ctrl.Antecedent(np.arange(-math.pi, math.pi, 0.1), 'collision_theta')
+        collision_theta = setup_mf_hept(collision_theta, ["NL", "NM", "NS", "Z", "PS", "PM", "PL"],
+                                        chromosome[6], chromosome[7], chromosome[8], chromosome[9],
+                                        chromosome[10], chromosome[11], chromosome[12],
+                                        -math.pi, 2 * math.pi)
+
+
+        # time until bullet hits asteroid
         bullet_time = ctrl.Antecedent(np.arange(0, 1.0, 0.002), 'bullet_time')
+        bullet_time = setup_mf_tri(bullet_time, ["S", "M", "L"],
+                                   chromosome[13], chromosome[14], chromosome[15])
+
+
+
         theta_delta = ctrl.Antecedent(np.arange(-1 * math.pi, math.pi, 0.1), 'theta_delta')  # Radians due to Python
+        theta_delta = setup_mf_pen(theta_delta, ["NL", "NS", "Z", "PS", "PL"],
+                                   chromosome[16], chromosome[17], chromosome[18], chromosome[19], chromosome[20],
+                                   -math.pi, 2 * math.pi)
 
         ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')  # Max thrust is 480 from source files
+        ship_thrust = setup_mf_pen(ship_thrust, ["NL", "NS", "Z", "PS", "PL"],
+                                   chromosome[22], chromosome[23], chromosome[24], chromosome[25], chromosome[26],
+                                   -480, 960)
+
         ship_turn = ctrl.Consequent(np.arange(-180, 180, 1), 'ship_turn')  # Degrees due to Kessler
+        ship_turn = setup_mf_pen(ship_turn, ["NL", "NS", "Z", "PS", "PL"],
+                                 chromosome[27], chromosome[28], chromosome[29], chromosome[30], chromosome[31],
+                                 -180, 360)
+
+
+
         ship_fire = ctrl.Consequent(np.arange(-1, 1, 0.1), 'ship_fire')
+        # Declare singleton fuzzy sets for the ship_fire consequent; -1 -> don't fire, +1 -> fire; this will be
+        # thresholded and returned as the boolean 'fire'
+        ship_fire['N'] = fuzz.trimf(ship_fire.universe, [-1, -1, 0.0])
+        ship_fire['Y'] = fuzz.trimf(ship_fire.universe, [0.0, 1, 1])
 
 
 
 
+
+        '''
 
 
         # Declare fuzzy sets for collision_time (how long until asteroid collides with ship)
@@ -99,37 +282,6 @@ class ScottDickController(KesslerController):
                                           self.max_collision_time])
 
         # collison time is 3 points, use 3 genes. Gene 1 = midpoint, gene 2 = left percent, gene 3 = right percent
-
-
-        def setup_mf_tri(ctrl_name, box_names, midpoint, left_percent, right_percent):
-            left_distance = midpoint - 0
-            right_distance = 1 - midpoint
-
-            left_point = midpoint-left_distance*left_percent
-            right_point = midpoint+right_distance*right_percent
-
-            ctrl_name[box_names[0]] = fuzz.trimf(collision_time.universe, [0, 0, midpoint])
-            ctrl_name[box_names[1]] = fuzz.trimf(collision_time.universe, [left_point, midpoint, right_point])
-            ctrl_name[box_names[2]] = fuzz.trimf(collision_time.universe, [midpoint, 1, 1])
-
-        def setup_mf_pen(ctrl_name, box_names, midpoint, left_percent_1, left_percent_2, right_percent_1, right_percent_2):
-            left_distance_1 = midpoint - 0
-            right_distance_1 = 1 - midpoint
-
-            left_point_1 = midpoint - left_distance_1 * left_percent_1
-            right_point_1 = midpoint + right_distance_1 * right_percent_1
-
-            left_distance_2 = left_point_1 - 0
-            right_distance_2 = 1 - right_point_1
-
-            left_point_2 = left_point_1 - left_distance_2 * left_percent_2
-            right_point_2 = right_point_1 + right_distance_2 * right_percent_2
-
-            ctrl_name[box_names[0]] = fuzz.zmf(collision_time.universe, left_point_2, left_point_1)
-            ctrl_name[box_names[1]] = fuzz.trimf(collision_time.universe, [left_point_2, left_point_1, midpoint])
-            ctrl_name[box_names[2]] = fuzz.trimf(collision_time.universe, [left_point_1, midpoint, right_point_1])
-            ctrl_name[box_names[3]] = fuzz.trimf(collision_time.universe, [midpoint, right_point_1, right_point_2])
-            ctrl_name[box_names[4]] = fuzz.smf(collision_time.universe, right_point_1, right_point_2)
 
         # Declare fuzzy sets for ship_speed
         ship_speed['N'] = fuzz.trimf(ship_speed.universe, [-240, -240, 0])
@@ -173,14 +325,16 @@ class ScottDickController(KesslerController):
         ship_turn['PS'] = fuzz.trimf(ship_turn.universe, [0, 30, 90])
         ship_turn['PL'] = fuzz.trimf(ship_turn.universe, [30, 180, 180])
 
-        # Declare singleton fuzzy sets for the ship_fire consequent; -1 -> don't fire, +1 -> fire; this will be
-        # thresholded and returned as the boolean 'fire'
-        ship_fire['N'] = fuzz.trimf(ship_fire.universe, [-1, -1, 0.0])
-        ship_fire['Y'] = fuzz.trimf(ship_fire.universe, [0.0, 1, 1])
 
-        # Declare sets for ship bomb as a yes or no
-        # ship_bomb['N'] = fuzz.trimf(ship_bomb.universe, [-1, -1, 0.0])
-        # ship_bomb['Y'] = fuzz.trimf(ship_bomb.universe, [0.0, 1, 1])
+
+        '''
+
+
+
+
+
+
+
 
         # Declare each fuzzy rule
 
@@ -222,15 +376,15 @@ class ScottDickController(KesslerController):
         rule32 = ctrl.Rule(collision_time['S'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NL']))
 
         # DEBUG
-        bullet_time.view()
-        theta_delta.view()
-        ship_speed.view()
-        collision_time.view()
-        collision_theta.view()
+        # bullet_time.view()
+        # theta_delta.view()
+        # ship_speed.view()
+        # collision_time.view()
+        # collision_theta.view()
         #
-        ship_turn.view()
-        ship_fire.view()
-        ship_thrust.view()
+        # ship_turn.view()
+        # ship_fire.view()
+        # ship_thrust.view()
 
         # Declare the fuzzy controller, add the rules
         # This is an instance variable, and thus available for other methods in the same object. See notes.
@@ -263,7 +417,7 @@ class ScottDickController(KesslerController):
         self.ship_control.addrule(rule31)
         self.ship_control.addrule(rule32)
 
-    def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool]:
+    def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, int]:
         """
         Method processed each time step by this controller.
         """
