@@ -194,7 +194,7 @@ def collision_prediction(ship, asteroid, time_limit):
         # Check for collision
         if norm(dx, dy) < ship["radius"] + asteroid["radius"] + buffer:
             # Collision has happened
-            collision_angle = math.radians(ship["heading"]) - math.atan2(astr_vel_y, astr_vel_x)
+            collision_angle = math.atan2(ship_vel_y, ship_vel_x) - math.atan2(astr_vel_y, astr_vel_x)
             collision_angle = (collision_angle + math.pi) % (
                         2 * math.pi) - math.pi  # angle of collision, wrapped to [-pi, pi]
 
@@ -339,41 +339,120 @@ class ScottDickController(KesslerController):
         # Declare each fuzzy rule
 
         # --- Shooting rules ---
-        rule0 = ctrl.Rule((bullet_time['S'] | bullet_time['M']) & (theta_delta['NS'] | theta_delta['Z'] | theta_delta['PS']), ship_fire['Y'])
-        rulex = ctrl.Rule(bullet_time['L'] | theta_delta['NL'] | theta_delta['PL'], ship_fire['N'])
+        # rule0 = ctrl.Rule((bullet_time['S'] | bullet_time['M']) & (theta_delta['NS'] | theta_delta['Z'] | theta_delta['PS']), ship_fire['Y'])
+        # rulex = ctrl.Rule(bullet_time['L'] | theta_delta['NL'] | theta_delta['PL'], ship_fire['N'])
+        #
+        # # --- Aiming rules ---
+        # rule1 = ctrl.Rule(theta_delta['NL'], (ship_turn['NL']))
+        # rule2 = ctrl.Rule(theta_delta['NS'], (ship_turn['NS']))
+        # rule3 = ctrl.Rule(theta_delta['Z'], (ship_turn['Z']))
+        # rule4 = ctrl.Rule(theta_delta['PS'], (ship_turn['PS']))
+        # rule5 = ctrl.Rule(theta_delta['PL'], (ship_turn['PL']))
+        #
+        # # --- Movement rules ---
+        # # low collision risk rules, slow down to stationary
+        # rule16 = ctrl.Rule(collision_time['L'] & ship_speed['P'], ship_thrust['NS'])
+        # rule17 = ctrl.Rule(collision_time['L'] & ship_speed['N'], ship_thrust['PS'])
+        # rule18 = ctrl.Rule(collision_time['L'] & ship_speed['Z'], ship_thrust['Z'])
+        #
+        # # medium collision risk rules
+        # rule19 = ctrl.Rule(collision_time['M'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['NS']))
+        # rule20 = ctrl.Rule(collision_time['M'] & collision_theta['NM'], (ship_turn['Z'], ship_thrust['PS']))
+        # rule21 = ctrl.Rule(collision_time['M'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['PS']))
+        # rule22 = ctrl.Rule(collision_time['M'] & collision_theta['Z'],
+        #                    (ship_turn['NS'], ship_thrust['PS']))  # default turn right when asteroid coming head on
+        # rule23 = ctrl.Rule(collision_time['M'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['PS']))
+        # rule24 = ctrl.Rule(collision_time['M'] & collision_theta['PM'], (ship_turn['Z'], ship_thrust['PS']))
+        # rule25 = ctrl.Rule(collision_time['M'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NS']))
+        #
+        # # high collision risk rules
+        # rule26 = ctrl.Rule(collision_time['S'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['NL']))
+        # rule27 = ctrl.Rule(collision_time['S'] & collision_theta['NM'], (ship_turn['Z'], ship_thrust['PL']))
+        # rule28 = ctrl.Rule(collision_time['S'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['PL']))
+        # rule29 = ctrl.Rule(collision_time['S'] & collision_theta['Z'],
+        #                    (ship_turn['Z'], ship_thrust['PS']))  # default turn right when asteroid coming head on
+        # rule30 = ctrl.Rule(collision_time['S'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['PL']))
+        # rule31 = ctrl.Rule(collision_time['S'] & collision_theta['PM'], (ship_turn['Z'], ship_thrust['PL']))
+        # rule32 = ctrl.Rule(collision_time['S'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NL']))
+
+
+        # --- Shooting rules ---
+        # Rule 1 - Shoot if the angle is small or the asteroid is near
+        # Rule 2 - Don't shoot if the angle is large
+        # *** competing instructions if the asteroid is close and the angle is large
+        rule1 = ctrl.Rule(theta_delta['NS'] | theta_delta['Z'] | theta_delta['PS'] | bullet_time['S'], ship_fire['Y'])
+        rule2 = ctrl.Rule(theta_delta['NL'] | theta_delta['PL'], ship_fire['N'])
 
         # --- Aiming rules ---
-        rule1 = ctrl.Rule(theta_delta['NL'], (ship_turn['NL']))
-        rule2 = ctrl.Rule(theta_delta['NS'], (ship_turn['NS']))
-        rule3 = ctrl.Rule(theta_delta['Z'], (ship_turn['Z']))
-        rule4 = ctrl.Rule(theta_delta['PS'], (ship_turn['PS']))
-        rule5 = ctrl.Rule(theta_delta['PL'], (ship_turn['PL']))
+        # Rules 3 - 7 - turn to face the closest asteroid if we are not in danger of a collision
+        rule3 = ctrl.Rule(collision_time['L'] & theta_delta['NL'], ship_turn['NL'])
+        rule4 = ctrl.Rule(collision_time['L'] & theta_delta['NS'], ship_turn['NS'])
+        rule5 = ctrl.Rule(collision_time['L'] & theta_delta['Z'], ship_turn['Z'])
+        rule6 = ctrl.Rule(collision_time['L'] & theta_delta['PS'], ship_turn['PS'])
+        rule7 = ctrl.Rule(collision_time['L'] & theta_delta['PL'], ship_turn['PL'])
 
         # --- Movement rules ---
-        # low collision risk rules, slow down to stationary
-        rule16 = ctrl.Rule(collision_time['L'] & ship_speed['P'], ship_thrust['NS'])
-        rule17 = ctrl.Rule(collision_time['L'] & ship_speed['N'], ship_thrust['PS'])
-        rule18 = ctrl.Rule(collision_time['L'] & ship_speed['Z'], ship_thrust['Z'])
+        # Rule 8 - 10 - If we are not in danger of a collision and are moving, slow down to zero
+        # Rule 11 - 15 - If the ship is not moving and a collision will occur in M time and the ship is not perdendicular, turn perpendicular to the asteroid
+        # Rule 16 - 17 - If the ship is not moving and a collision will occur in M time and the ship is perdendicular, go forward
+        # Rule 18 - 24 - Same as 11 - 17, but this time S collision time. Increased response.
+        # Rule 25 - 26 - If the ship is moving and a perpendicular collision will occur in M time, try to slow down / go the opposite direction
+        # Rule 27 - 28 - Same as 23 - 24, but this time S collision time. Increased response.
+        rule8 = ctrl.Rule(collision_time['L'] & ship_speed['P'], ship_thrust['NL'])
+        rule9 = ctrl.Rule(collision_time['L'] & ship_speed['N'], ship_thrust['PL'])
+        rule10 = ctrl.Rule(collision_time['L'] & ship_speed['Z'], ship_thrust['Z'])
 
-        # medium collision risk rules
-        rule19 = ctrl.Rule(collision_time['M'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['NS']))
-        rule20 = ctrl.Rule(collision_time['M'] & collision_theta['NM'], (ship_turn['Z'], ship_thrust['PS']))
-        rule21 = ctrl.Rule(collision_time['M'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['PS']))
-        rule22 = ctrl.Rule(collision_time['M'] & collision_theta['Z'],
-                           (ship_turn['NS'], ship_thrust['PS']))  # default turn right when asteroid coming head on
-        rule23 = ctrl.Rule(collision_time['M'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['PS']))
-        rule24 = ctrl.Rule(collision_time['M'] & collision_theta['PM'], (ship_turn['Z'], ship_thrust['PS']))
-        rule25 = ctrl.Rule(collision_time['M'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NS']))
+        rule11 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NL'], ship_turn['NS'])
+        rule12 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PL'], ship_turn['PS'])
+        rule13 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NS'], ship_turn['PS'])
+        rule14 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PS'], ship_turn['NS'])
+        rule15 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['Z'], ship_turn['PL'])
 
-        # high collision risk rules
-        rule26 = ctrl.Rule(collision_time['S'] & collision_theta['NL'], (ship_turn['PS'], ship_thrust['NL']))
-        rule27 = ctrl.Rule(collision_time['S'] & collision_theta['NM'], (ship_turn['Z'], ship_thrust['PL']))
-        rule28 = ctrl.Rule(collision_time['S'] & collision_theta['NS'], (ship_turn['NS'], ship_thrust['PL']))
-        rule29 = ctrl.Rule(collision_time['S'] & collision_theta['Z'],
-                           (ship_turn['Z'], ship_thrust['PS']))  # default turn right when asteroid coming head on
-        rule30 = ctrl.Rule(collision_time['S'] & collision_theta['PS'], (ship_turn['PS'], ship_thrust['PL']))
-        rule31 = ctrl.Rule(collision_time['S'] & collision_theta['PM'], (ship_turn['Z'], ship_thrust['PL']))
-        rule32 = ctrl.Rule(collision_time['S'] & collision_theta['PL'], (ship_turn['NS'], ship_thrust['NL']))
+        rule16 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NM'], ship_thrust['PS'])
+        rule17 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PM'], ship_thrust['PS'])
+
+        rule18 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NL'], ship_turn['NL'])
+        rule19 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PL'], ship_turn['PL'])
+        rule20 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NS'], ship_turn['PL'])
+        rule21 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PS'], ship_turn['NL'])
+        rule22 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['Z'], ship_turn['PL'])
+
+        rule23 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NM'], ship_thrust['PL'])
+        rule24 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PM'], ship_thrust['PL'])
+
+        rule25 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['NM'] |
+                           ship_speed['P'] & collision_time['M'] & collision_theta['PM'], ship_thrust['NS'])
+        rule26 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['NM'] |
+                           ship_speed['N'] & collision_time['M'] & collision_theta['PM'], ship_thrust['PS'])
+
+        rule27 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['NM'] |
+                           ship_speed['P'] & collision_time['S'] & collision_theta['PM'], ship_thrust['NL'])
+        rule28 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['NM'] |
+                           ship_speed['N'] & collision_time['S'] & collision_theta['PM'], ship_thrust['PL'])
+
+        rule29 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['NL'], (ship_turn['NS'], ship_thrust['NS']))
+        rule30 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['PL'], (ship_turn['PS'], ship_thrust['NS']))
+        rule31 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['NS'], (ship_turn['PS'], ship_thrust['PS']))
+        rule32 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['PS'], (ship_turn['NS'], ship_thrust['PS']))
+        rule33 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['Z'], (ship_turn['PS'], ship_thrust['PS']))
+
+        rule34 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['NL'], (ship_turn['NS'], ship_thrust['PS']))
+        rule35 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['PL'], (ship_turn['PS'], ship_thrust['PS']))
+        rule36 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['NS'], (ship_turn['PS'], ship_thrust['NS']))
+        rule37 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['PS'], (ship_turn['NS'], ship_thrust['NS']))
+        rule38 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['Z'], (ship_turn['PS'], ship_thrust['NS']))
+
+        rule39 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['NL'], (ship_turn['NS'], ship_thrust['NL']))
+        rule40 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['PL'], (ship_turn['PS'], ship_thrust['NL']))
+        rule41 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['NS'], (ship_turn['PS'], ship_thrust['PL']))
+        rule42 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['PS'], (ship_turn['NS'], ship_thrust['PL']))
+        rule43 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['Z'], (ship_turn['PS'], ship_thrust['PL']))
+
+        rule44 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['NL'], (ship_turn['NS'], ship_thrust['PL']))
+        rule45 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['PL'], (ship_turn['PS'], ship_thrust['PL']))
+        rule46 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['NS'], (ship_turn['PS'], ship_thrust['NL']))
+        rule47 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['PS'], (ship_turn['NS'], ship_thrust['NL']))
+        rule48 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['Z'], (ship_turn['PS'], ship_thrust['NL']))
 
         # DEBUG
         # bullet_time.view()
@@ -392,13 +471,21 @@ class ScottDickController(KesslerController):
 
         self.ship_control = ctrl.ControlSystem()
 
-        self.ship_control.addrule(rulex)
-        self.ship_control.addrule(rule0)
         self.ship_control.addrule(rule1)
         self.ship_control.addrule(rule2)
         self.ship_control.addrule(rule3)
         self.ship_control.addrule(rule4)
         self.ship_control.addrule(rule5)
+        self.ship_control.addrule(rule6)
+        self.ship_control.addrule(rule7)
+        self.ship_control.addrule(rule8)
+        self.ship_control.addrule(rule9)
+        self.ship_control.addrule(rule10)
+        self.ship_control.addrule(rule11)
+        self.ship_control.addrule(rule12)
+        self.ship_control.addrule(rule13)
+        self.ship_control.addrule(rule14)
+        self.ship_control.addrule(rule15)
         self.ship_control.addrule(rule16)
         self.ship_control.addrule(rule17)
         self.ship_control.addrule(rule18)
@@ -416,6 +503,22 @@ class ScottDickController(KesslerController):
         self.ship_control.addrule(rule30)
         self.ship_control.addrule(rule31)
         self.ship_control.addrule(rule32)
+        self.ship_control.addrule(rule33)
+        self.ship_control.addrule(rule34)
+        self.ship_control.addrule(rule35)
+        self.ship_control.addrule(rule36)
+        self.ship_control.addrule(rule37)
+        self.ship_control.addrule(rule38)
+        self.ship_control.addrule(rule39)
+        self.ship_control.addrule(rule40)
+        self.ship_control.addrule(rule41)
+        self.ship_control.addrule(rule42)
+        self.ship_control.addrule(rule43)
+        self.ship_control.addrule(rule44)
+        self.ship_control.addrule(rule45)
+        self.ship_control.addrule(rule46)
+        self.ship_control.addrule(rule47)
+        self.ship_control.addrule(rule48)
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, int]:
         """
