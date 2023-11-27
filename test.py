@@ -402,33 +402,33 @@ class ScottDickController(KesslerController):
         rule9 = ctrl.Rule(collision_time['L'] & ship_speed['N'], ship_thrust['PL'])
         rule10 = ctrl.Rule(collision_time['L'] & ship_speed['Z'], ship_thrust['Z'])
 
-        rule11 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NL'], ship_turn['NS'])
-        rule12 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PL'], ship_turn['PS'])
-        rule13 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NS'], ship_turn['PS'])
-        rule14 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PS'], ship_turn['NS'])
-        rule15 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['Z'], ship_turn['PL'])
+        rule11 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NL'], (ship_turn['NS'], ship_thrust['Z']))
+        rule12 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PL'], (ship_turn['PS'], ship_thrust['Z']))
+        rule13 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NS'], (ship_turn['PS'], ship_thrust['Z']))
+        rule14 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PS'], (ship_turn['NS'], ship_thrust['Z']))
+        rule15 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['Z'], (ship_turn['PL'], ship_thrust['Z']))
 
-        rule16 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NM'], ship_thrust['PS'])
-        rule17 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PM'], ship_thrust['PS'])
+        rule16 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['NM'], (ship_thrust['PS'], ship_turn['Z']))
+        rule17 = ctrl.Rule(ship_speed['Z'] & collision_time['M'] & collision_theta['PM'], (ship_thrust['PS'], ship_turn['Z']))
 
-        rule18 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NL'], ship_turn['NL'])
-        rule19 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PL'], ship_turn['PL'])
-        rule20 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NS'], ship_turn['PL'])
-        rule21 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PS'], ship_turn['NL'])
-        rule22 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['Z'], ship_turn['PL'])
+        rule18 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NL'], (ship_turn['NL'], ship_thrust['Z']))
+        rule19 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PL'], (ship_turn['PL'], ship_thrust['Z']))
+        rule20 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NS'], (ship_turn['PL'], ship_thrust['Z']))
+        rule21 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PS'], (ship_turn['NL'], ship_thrust['Z']))
+        rule22 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['Z'], (ship_turn['PL'], ship_thrust['Z']))
 
-        rule23 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NM'], ship_thrust['PL'])
-        rule24 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PM'], ship_thrust['PL'])
+        rule23 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['NM'], (ship_thrust['PL'], ship_turn['Z']))
+        rule24 = ctrl.Rule(ship_speed['Z'] & collision_time['S'] & collision_theta['PM'], (ship_thrust['PL'], ship_turn['Z']))
 
         rule25 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['NM'] |
-                           ship_speed['P'] & collision_time['M'] & collision_theta['PM'], ship_thrust['NS'])
+                           ship_speed['P'] & collision_time['M'] & collision_theta['PM'], (ship_thrust['NS'], ship_turn['Z']))
         rule26 = ctrl.Rule(ship_speed['N'] & collision_time['M'] & collision_theta['NM'] |
-                           ship_speed['N'] & collision_time['M'] & collision_theta['PM'], ship_thrust['PS'])
+                           ship_speed['N'] & collision_time['M'] & collision_theta['PM'], (ship_thrust['PS'], ship_turn['Z']))
 
         rule27 = ctrl.Rule(ship_speed['P'] & collision_time['S'] & collision_theta['NM'] |
-                           ship_speed['P'] & collision_time['S'] & collision_theta['PM'], ship_thrust['NL'])
+                           ship_speed['P'] & collision_time['S'] & collision_theta['PM'], (ship_thrust['NL'], ship_turn['Z']))
         rule28 = ctrl.Rule(ship_speed['N'] & collision_time['S'] & collision_theta['NM'] |
-                           ship_speed['N'] & collision_time['S'] & collision_theta['PM'], ship_thrust['PL'])
+                           ship_speed['N'] & collision_time['S'] & collision_theta['PM'], (ship_thrust['PL'], ship_turn['Z']))
 
         rule29 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['NL'], (ship_turn['NS'], ship_thrust['NS']))
         rule30 = ctrl.Rule(ship_speed['P'] & collision_time['M'] & collision_theta['PL'], (ship_turn['PS'], ship_thrust['NS']))
