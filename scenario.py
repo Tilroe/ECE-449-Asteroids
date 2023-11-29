@@ -14,7 +14,7 @@ import EasyGA
 # Define game scenario
 my_test_scenario = Scenario(name='Test Scenario',
                             ship_states=[
-                                {'position': (500, 400), 'angle': 90, 'lives': 3, 'team': 1, "mines_remaining": 3},
+                                {'position': (500, 400), 'angle': 90, 'lives': 3, 'team': 1},
                             ],
                             # asteroid_states=[
                             #     {'position': (500, 0), 'angle': 270, 'size': 3},

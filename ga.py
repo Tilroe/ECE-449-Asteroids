@@ -15,7 +15,7 @@ def fitness(instance, chromosome, idx):
     # print(idx)
     my_test_scenario = Scenario(name='Test Scenario',
                                 ship_states=[
-                                    {'position': (500, 400), 'angle': 90, 'lives': 3, 'team': 1, "mines_remaining": 0},
+                                    {'position': (500, 400), 'angle': 90, 'lives': 3, 'team': 1},
                                 ],
                                 num_asteroids=10,
                                 map_size=(1000, 800),

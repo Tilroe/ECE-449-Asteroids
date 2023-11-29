@@ -655,7 +655,7 @@ class ScottDickController(KesslerController):
         # speed = ship_state["speed"]
         # print(f"next collision: {closest_collision:.2f}, thrust: {thrust:.1f}, speed: {speed:.1f}")
 
-        return thrust, turn_rate, fire, 0
+        return thrust, turn_rate, fire
 
     @property
     def name(self) -> str:
