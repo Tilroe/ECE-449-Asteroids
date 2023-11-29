@@ -41,8 +41,9 @@ pre = time.perf_counter()
 
 ga = EasyGA.GA()
 
-best_chromosome = "[0.982][0.812][0.387][0.274][0.863][0.439][0.04][0.271][0.61][0.482][0.54][0.669][0.003][0.156][0.639][0.658][0.426][0.513][0.166][0.788][0.469][0.758][0.716][0.916][0.836][0.117][0.185][0.329][0.58][0.43][0.934][0.033]"
-chromosome = ga.make_chromosome([float(i) for i in best_chromosome[1:-1].split("][")])
+best_chromosome = "[0.758][0.508][0.946][0.358][0.732][0.606][0.039][0.95][0.698][0.945][0.941][0.241][0.126][0.775][0.979][0.277][0.478][0.113][0.958][0.144][0.041][0.214][0.038][0.001][0.565][0.285][0.865][0.486][0.664][0.359][0.263][0.766]"
+# chromosome = ga.make_chromosome([float(i) for i in best_chromosome[1:-1].split("][")])
+chromosome = [float(i) for i in best_chromosome[1:-1].split("][")]
 
 print("Starting")
 score, perf_data = game.run(scenario=my_test_scenario, controllers=[ScottDickController(chromosome)])

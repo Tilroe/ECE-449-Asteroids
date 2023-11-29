@@ -28,9 +28,9 @@ def setup_mf_tri(ctrl_name, box_names, midpoint, lp, rp, offset=0.0, length=1.0)
     :param length: The length of the function
     :return ctrl_name: The control with the membership functions added
     """
-    midpoint = midpoint.value
-    lp = lp.value
-    rp = rp.value
+    # midpoint = midpoint.value
+    # lp = lp.value
+    # rp = rp.value
 
     left_distance = midpoint - 0
     right_distance = 1 - midpoint
@@ -64,11 +64,11 @@ def setup_mf_pen(ctrl_name, box_names, midpoint, lp1, lp2, rp1, rp2, offset=0.0,
     :return ctrl_name: The control with the membership functions added
     """
 
-    midpoint = midpoint.value
-    lp1 = lp1.value
-    rp1 = rp1.value
-    lp2 = lp2.value
-    rp2 = rp2.value
+    # midpoint = midpoint.value
+    # lp1 = lp1.value
+    # rp1 = rp1.value
+    # lp2 = lp2.value
+    # rp2 = rp2.value
 
 
 
@@ -116,13 +116,13 @@ def setup_mf_hept(ctrl_name, box_names, midpoint, lp1, lp2, lp3, rp1, rp2, rp3, 
     :return ctrl_name: The control with the membership functions added
     """
 
-    midpoint = midpoint.value
-    lp1 = lp1.value
-    rp1 = rp1.value
-    lp2 = lp2.value
-    rp2 = rp2.value
-    lp3 = lp3.value
-    rp3 = rp3.value
+    # midpoint = midpoint.value
+    # lp1 = lp1.value
+    # rp1 = rp1.value
+    # lp2 = lp2.value
+    # rp2 = rp2.value
+    # lp3 = lp3.value
+    # rp3 = rp3.value
 
     left_distance_1 = midpoint - 0
     right_distance_1 = 1 - midpoint
