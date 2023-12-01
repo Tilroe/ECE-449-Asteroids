@@ -58,13 +58,13 @@ if __name__ == '__main__':
 
 
     ga_instance = pygad.GA(num_generations=num_generations,
-                           num_parents_mating=2,
+                           num_parents_mating=5,
                            fitness_func=fitness,
                            on_generation=on_generation,
-                           num_genes=32,
-                           sol_per_pop=5,
+                           num_genes=42,
+                           sol_per_pop=15,
                            gene_space={'low': 0, 'high': 1, 'step': 0.001},
-                           parallel_processing=["process", 5])
+                           parallel_processing=["process", 20])
 
     ga_instance.run()
 

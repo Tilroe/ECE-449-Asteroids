@@ -266,71 +266,55 @@ class ScottDickController(KesslerController):
         ship_fire['N'] = fuzz.trimf(ship_fire.universe, [-1, -1, 0.0])
         ship_fire['Y'] = fuzz.trimf(ship_fire.universe, [0.0, 1, 1])
 
+        size = ctrl.Antecedent(np.arange(0, 5, 0.1), 'size')  # Size of Asteroid
+        size['S'] = fuzz.trimf(size.universe, [0.25, 1, 1.75])
+        size['SM'] = fuzz.trimf(size.universe, [1.25, 2, 2.75])
+        size['LM'] = fuzz.trimf(size.universe, [2.25, 3, 3.75])
+        size['L'] = fuzz.trimf(size.universe, [3.25, 4, 4.75])
+        # size.view()
 
+        speed = ctrl.Antecedent(np.arange(0, 180, 0.1), 'speed')  # Speed of Asteroid
+        speed = setup_mf_tri(speed, ["S", "M", "F"], chromosome[32], chromosome[33], chromosome[34], 0, 180)
+        # speed.view()
 
+        target_priority = ctrl.Consequent(np.arange(0, 1, 0.001), 'target_priority')
+        target_priority = setup_mf_hept(target_priority, ["VL", "L", "SL", "M", "SH", "H", "VH"],
+                                        chromosome[35], chromosome[36], chromosome[37], chromosome[38], chromosome[39],
+                                        chromosome[40], chromosome[41])
 
+        # target_priority.view()
 
-        '''
+        # Target Rules
+        target1 = ctrl.Rule(size['L'] & speed['S'], target_priority['H'])
+        target2 = ctrl.Rule(size['L'] & speed['M'], target_priority['L'])
+        target3 = ctrl.Rule(size['L'] & speed['F'], target_priority['VL'])
 
+        target4 = ctrl.Rule(size['LM'] & speed['S'], target_priority['H'])
+        target5 = ctrl.Rule(size['LM'] & speed['M'], target_priority['M'])
+        target6 = ctrl.Rule(size['LM'] & speed['F'], target_priority['SL'])
 
-        # Declare fuzzy sets for collision_time (how long until asteroid collides with ship)
-        collision_time['S'] = fuzz.trimf(collision_time.universe, [0, 0, self.max_collision_time / 2])
-        collision_time['M'] = fuzz.trimf(collision_time.universe,
-                                         [0, self.max_collision_time / 2, self.max_collision_time])
-        collision_time['L'] = fuzz.trimf(collision_time.universe,
-                                         [self.max_collision_time / 2, self.max_collision_time / 2,
-                                          self.max_collision_time])
+        target7 = ctrl.Rule(size['SM'] & speed['S'], target_priority['SH'])
+        target8 = ctrl.Rule(size['SM'] & speed['M'], target_priority['M'])
+        target9 = ctrl.Rule(size['SM'] & speed['F'], target_priority['M'])
 
-        # collison time is 3 points, use 3 genes. Gene 1 = midpoint, gene 2 = left percent, gene 3 = right percent
+        target10 = ctrl.Rule(size['S'] & speed['S'], target_priority['SL'])
+        target11 = ctrl.Rule(size['S'] & speed['M'], target_priority['SH'])
+        target12 = ctrl.Rule(size['S'] & speed['F'], target_priority['VH'])
 
-        # Declare fuzzy sets for ship_speed
-        ship_speed['N'] = fuzz.trimf(ship_speed.universe, [-240, -240, 0])
-        ship_speed['Z'] = fuzz.trimf(ship_speed.universe, [-10, 0, 10])
-        ship_speed['P'] = fuzz.trimf(ship_speed.universe, [0, 240, 240])
+        self.target_control = ctrl.ControlSystem()
 
-        # Declare fuzzy sets for collision theta
-        collision_theta['NL'] = fuzz.trimf(collision_theta.universe, [-math.pi, -math.pi, -math.pi / 2])
-        collision_theta['NM'] = fuzz.trimf(collision_theta.universe,
-                                           [-math.pi * 3 / 4, - math.pi / 2, - math.pi * 1 / 4])
-        collision_theta['NS'] = fuzz.trimf(collision_theta.universe, [-math.pi / 2, -math.pi * 1 / 4, 0])
-        collision_theta['Z'] = fuzz.trimf(collision_theta.universe, [-math.pi * 1 / 4, 0, math.pi * 1 / 4])
-        collision_theta['PS'] = fuzz.trimf(collision_theta.universe, [0, math.pi * 1 / 4, math.pi / 2])
-        collision_theta['PM'] = fuzz.trimf(collision_theta.universe, [math.pi * 1 / 4, math.pi / 2, math.pi * 3 / 4])
-        collision_theta['PL'] = fuzz.trimf(collision_theta.universe, [math.pi / 2, math.pi, math.pi])
-
-        # Declare sets for ship thrust on a range of nl to pl
-        ship_thrust['NL'] = fuzz.zmf(ship_thrust.universe, -480, -120)
-        ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-240, -120, 0])
-        ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [-60, 0, 60])
-        ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [0, 120, 240])
-        ship_thrust['PL'] = fuzz.smf(ship_thrust.universe, 120, 480)
-
-        # Declare fuzzy sets for bullet_time (how long it takes for the bullet to reach the intercept point)
-        bullet_time['S'] = fuzz.trimf(bullet_time.universe, [0, 0, 0.05])
-        bullet_time['M'] = fuzz.trimf(bullet_time.universe, [0, 0.05, 0.1])
-        bullet_time['L'] = fuzz.smf(bullet_time.universe, 0.0, 0.1)
-
-        # Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
-        theta_delta['NL'] = fuzz.zmf(theta_delta.universe, -1 * math.pi / 3, -1 * math.pi / 6)
-        theta_delta['NS'] = fuzz.trimf(theta_delta.universe, [-1 * math.pi / 3, -1 * math.pi / 6, 0])
-        theta_delta['Z'] = fuzz.trimf(theta_delta.universe, [-1 * math.pi / 6, 0, math.pi / 6])
-        theta_delta['PS'] = fuzz.trimf(theta_delta.universe, [0, math.pi / 6, math.pi / 3])
-        theta_delta['PL'] = fuzz.smf(theta_delta.universe, math.pi / 6, math.pi / 3)
-        # theta_delta.view()
-
-        # Declare fuzzy sets for the ship_turn consequent; this will be returned as turn_rate.
-        ship_turn['NL'] = fuzz.trimf(ship_turn.universe, [-180, -180, -30])
-        ship_turn['NS'] = fuzz.trimf(ship_turn.universe, [-90, -30, 0])
-        ship_turn['Z'] = fuzz.trimf(ship_turn.universe, [-30, 0, 30])
-        ship_turn['PS'] = fuzz.trimf(ship_turn.universe, [0, 30, 90])
-        ship_turn['PL'] = fuzz.trimf(ship_turn.universe, [30, 180, 180])
-
-
-
-        '''
-
-
-
+        self.target_control.addrule(target1)
+        self.target_control.addrule(target2)
+        self.target_control.addrule(target3)
+        self.target_control.addrule(target4)
+        self.target_control.addrule(target5)
+        self.target_control.addrule(target6)
+        self.target_control.addrule(target7)
+        self.target_control.addrule(target8)
+        self.target_control.addrule(target9)
+        self.target_control.addrule(target10)
+        self.target_control.addrule(target11)
+        self.target_control.addrule(target12)
 
 
 
@@ -547,19 +531,53 @@ class ScottDickController(KesslerController):
         ship_pos_y = ship_state["position"][1]
         closest_asteroid = None
 
-        for a in game_state["asteroids"]:
-            # Loop through all asteroids, find minimum Eudlidean distance
-            curr_dist = math.sqrt((ship_pos_x - a["position"][0]) ** 2 + (ship_pos_y - a["position"][1]) ** 2)
-            if closest_asteroid is None:
-                # Does not yet exist, so initialize first asteroid as the minimum. Ugh, how to do?
-                closest_asteroid = dict(aster=a, dist=curr_dist)
 
-            else:
-                # closest_asteroid exists, and is thus initialized.
-                if closest_asteroid["dist"] > curr_dist:
-                    # New minimum found
-                    closest_asteroid["aster"] = a
-                    closest_asteroid["dist"] = curr_dist
+
+
+        # for a in game_state["asteroids"]:
+        #     # Loop through all asteroids, find minimum Eudlidean distance
+        #     curr_dist = math.sqrt((ship_pos_x - a["position"][0]) ** 2 + (ship_pos_y - a["position"][1]) ** 2)
+        #     if closest_asteroid is None:
+        #         # Does not yet exist, so initialize first asteroid as the minimum. Ugh, how to do?
+        #         closest_asteroid = dict(aster=a, dist=curr_dist)
+        #
+        #     else:
+        #         # closest_asteroid exists, and is thus initialized.
+        #         if closest_asteroid["dist"] > curr_dist:
+        #             # New minimum found
+        #             closest_asteroid["aster"] = a
+        #             closest_asteroid["dist"] = curr_dist
+
+        target_sim = ctrl.ControlSystemSimulation(self.target_control, flush_after_run=1)
+
+        for a in game_state["asteroids"]:
+            curr_dist = math.sqrt((ship_pos_x - a["position"][0]) ** 2 + (ship_pos_y - a["position"][1]) ** 2)
+
+            if closest_asteroid is None:
+                closest_asteroid = dict(aster=a, priority=0, dist=curr_dist)
+
+            if curr_dist < 20:
+                target_sim.input['size'] = a['size']
+
+                vel_x = a['velocity'][0]
+                vel_y = a['velocity'][1]
+
+                target_sim.input['speed'] = math.sqrt(vel_x ** 2 + vel_y ** 2)
+                # print(math.sqrt(vel_x ** 2 + vel_y ** 2))
+                # print(a['size'])
+
+                target_sim.compute()
+                target_priority = target_sim.output['target_priority']
+
+
+                if closest_asteroid is None:
+                    closest_asteroid = dict(aster=a, priority=target_priority, dist=curr_dist)
+                else:
+                    if closest_asteroid["priority"] < target_priority:
+                        closest_asteroid["aster"] = a
+                        closest_asteroid["priority"] = target_priority
+                        closest_asteroid["dist"] = curr_dist
+
 
         # closest_asteroid is now the nearest asteroid object.
         # Calculate intercept time given ship & asteroid position, asteroid velocity vector, bullet speed (not direction).
