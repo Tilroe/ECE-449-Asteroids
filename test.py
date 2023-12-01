@@ -218,44 +218,44 @@ class ScottDickController(KesslerController):
         # Declare variables
         ship_speed = ctrl.Antecedent(np.arange(-240, 240, 1), "ship_speed")  # Max speed is 240 from source files
         ship_speed = setup_mf_tri(ship_speed, ["N", "Z", "P"],
-                                  chromosome[0], chromosome[1], chromosome[2],
+                                  0.5, chromosome[0], chromosome[1],
                                   -240, 480)
 
 
         # time until closest collision
         collision_time = ctrl.Antecedent(np.arange(0, self.max_collision_time, 0.02), 'collision_time')
         collision_time = setup_mf_tri(collision_time, ["S", "M", "L"],
-                                      chromosome[3], chromosome[4], chromosome[5],
+                                      chromosome[2], chromosome[3], chromosome[4],
                                       0, self.max_collision_time)
 
         # angle between ship heading and asteroid theta
         collision_theta = ctrl.Antecedent(np.arange(-math.pi, math.pi, 0.1), 'collision_theta')
         collision_theta = setup_mf_hept(collision_theta, ["NL", "NM", "NS", "Z", "PS", "PM", "PL"],
-                                        chromosome[6], chromosome[7], chromosome[8], chromosome[9],
-                                        chromosome[10], chromosome[11], chromosome[12],
+                                        0.5, chromosome[5], chromosome[6], chromosome[7],
+                                        chromosome[8], chromosome[9], chromosome[10],
                                         -math.pi, 2 * math.pi)
 
 
         # time until bullet hits asteroid
         bullet_time = ctrl.Antecedent(np.arange(0, 1.0, 0.002), 'bullet_time')
         bullet_time = setup_mf_tri(bullet_time, ["S", "M", "L"],
-                                   chromosome[13], chromosome[14], chromosome[15])
+                                   chromosome[11], chromosome[12], chromosome[13])
 
 
 
         theta_delta = ctrl.Antecedent(np.arange(-1 * math.pi, math.pi, 0.1), 'theta_delta')  # Radians due to Python
         theta_delta = setup_mf_pen(theta_delta, ["NL", "NS", "Z", "PS", "PL"],
-                                   chromosome[16], chromosome[17], chromosome[18], chromosome[19], chromosome[20],
+                                   0.5, chromosome[14], chromosome[15], chromosome[16], chromosome[17],
                                    -math.pi, 2 * math.pi)
 
         ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')  # Max thrust is 480 from source files
         ship_thrust = setup_mf_pen(ship_thrust, ["NL", "NS", "Z", "PS", "PL"],
-                                   chromosome[22], chromosome[23], chromosome[24], chromosome[25], chromosome[26],
+                                   0.5, chromosome[18], chromosome[19], chromosome[20], chromosome[21],
                                    -480, 960)
 
         ship_turn = ctrl.Consequent(np.arange(-180, 180, 1), 'ship_turn')  # Degrees due to Kessler
         ship_turn = setup_mf_pen(ship_turn, ["NL", "NS", "Z", "PS", "PL"],
-                                 chromosome[27], chromosome[28], chromosome[29], chromosome[30], chromosome[31],
+                                 0.5, chromosome[22], chromosome[23], chromosome[24], chromosome[25],
                                  -180, 360)
 
 

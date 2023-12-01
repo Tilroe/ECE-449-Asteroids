@@ -46,11 +46,11 @@ def fitness(instance, chromosome, idx):
 def on_generation(ga_instance):
     print(f"Generation = {ga_instance.generations_completed}")
     print(f"Fitness    = {ga_instance.best_solution()[1]}")
-    print(f"Best       = {ga_instance.best_solution()}")
+    print(f"Chromosome = {ga_instance.best_solution()[0]}")
 
 
 
-num_generations = 2 # Number of generations.
+num_generations = 50 # Number of generations.
 #num_parents_mating = 5 # Number of solutions to be selected as parents in the mating pool.
 
 
@@ -58,13 +58,13 @@ if __name__ == '__main__':
 
 
     ga_instance = pygad.GA(num_generations=num_generations,
-                           num_parents_mating=2,
+                           num_parents_mating=4,
                            fitness_func=fitness,
                            on_generation=on_generation,
-                           num_genes=32,
-                           sol_per_pop=5,
+                           num_genes=26,
+                           sol_per_pop=30,
                            gene_space={'low': 0, 'high': 1, 'step': 0.001},
-                           parallel_processing=["process", 5])
+                           parallel_processing=["process", 15])
 
     ga_instance.run()
 
